@@ -7,7 +7,7 @@ See instructions below to see how to switch to permanent or temporary write-mode
 
 This script is tested with a freshly deployed Raspbian Lite Bullseye image on a Raspberry Pi Zero W. It has also been tested on a recent Devuan Chimaera image on a Raspberry Pi Zero 2 W.
 
-This repository is a fork of JasperE84
+This repository is a fork of the one from JasperE84:
 - https://github.com/JasperE84/root-ro
 
 Congratulate the original authors if these files work as expected. 
@@ -29,8 +29,9 @@ Read more about the overlay filesystem here: https://wiki.archlinux.org/index.ph
 
 About the /boot partition
 ====
-This script does not apply to the /boot partition of Raspberry Pi. That means it will still be writable by default. To change that, edit `/etc/fstab` and add the `ro` option to the /boot line on the third column from the right.
-To enable writing to the /boot partition, you can either remove the `ro` option from fstab and reboot, or use this command to do it live:
+This script does not apply to the /boot partition of Raspberry Pi. That means it will still be writable by default. To change that, edit `/etc/fstab` and add the `ro` option to the /boot line on the third column from the right, and reboot.
+
+To enable writing to the /boot partition again, you can either remove the `ro` option from fstab and reboot, or use this command to do it live:
 ```
 sudo mount -o remount,rw /boot
 ```
