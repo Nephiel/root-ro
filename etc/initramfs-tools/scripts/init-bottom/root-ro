@@ -1,14 +1,15 @@
 #!/bin/sh
 #
-#  Read-only Root-FS for Raspian Stretch
+#  Read-only Root-FS for Raspian Bullseye
 #
-#  Modified 2019 by Jasper Ennik to work with Raspain Stretch
+#  Modified 2021 by Nephiel to work with Raspbian Bullseye and Devuan
 #
 #  Based on scripts from
-#    Sebastian P., Nicholas A., Axel Heider, Pascal Rosin
+#    Sebastian P., Nicholas A., Axel Heider, Pascal Rosin, Jasper Ennik
 #  And sources found at
 #    Niun: https://gist.github.com/niun/34c945d70753fc9e2cc7
 #    Josep Sanz: https://github.com/josepsanzcamp/root-ro
+#    Jasper Ennik: https://github.com/JasperE84/root-ro
 #
 #  This program is free software: you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -41,6 +42,9 @@
 # v3.0.0
 #   - Mods to make it work with Raspian stretch and some console scripts to reboot
 #     to readonly/write mode.
+#
+# v3.0.1
+#   - Minor fixes for Raspbian bullseye
 #
 # Notes:
 #   * no changes to the root fs are made by this script.
@@ -239,8 +243,8 @@ if [ $? -ne 0 ]; then
     exit 0
 fi
 
-# technically, everything is set up nicely now. Since ${rootmnt} had beend
-# mounted read-only on the initfamfs already, ${rootmnt}${ROOT_RO} is it, too.
+# technically, everything is set up nicely now. Since ${rootmnt} had been
+# mounted read-only on the initfamfs already, ${rootmnt}${ROOT_RO} is, too.
 # Now we init process could run - but unfortunately, we may have to prepare
 # some more things here.
 # Basically, there are two ways to deal with the read-only root fs. If the
@@ -254,13 +258,21 @@ fi
 # ${ROOT_RO} entry.
 # Remember we are still on the initramfs root fs here, so we have to work on
 # ${rootmnt}/etc/fstab. The original fstab is ${rootmnt}${ROOT_RO}/etc/fstab.
-ROOT_TYPE=$(cat /proc/mounts | ${rootmnt}/bin/grep ${ROOT} | ${rootmnt}/usr/bin/cut -d' ' -f3)
-ROOT_OPTIONS=$(cat /proc/mounts | ${rootmnt}/bin/grep ${ROOT} | ${rootmnt}/usr/bin/cut -d' ' -f4)
+ROOT_TYPE=$(cat /proc/mounts | ${rootmnt}/usr/bin/grep ${ROOT} | ${rootmnt}/usr/bin/cut -d' ' -f3)
+if [ -z "${ROOT_TYPE}" ]; then
+    log_failure_msg "${MYTAG} ERROR 13: unable to parse ROOT_TYPE from fstab"
+    exit 0
+fi
+ROOT_OPTIONS=$(cat /proc/mounts | ${rootmnt}/usr/bin/grep ${ROOT} | ${rootmnt}/usr/bin/cut -d' ' -f4)
+if [ -z "${ROOT_OPTIONS}" ]; then
+    log_failure_msg "${MYTAG} ERROR 14: unable to parse ROOT_OPTIONS from fstab"
+    exit 0
+fi
 cat <<EOF >${rootmnt}/etc/fstab
 #
 #  This fstab is in RAM, the real one can be found at ${ROOT_RO}/etc/fstab
 #  The original entry for '/' and all swap files have been removed.  The new
-#  entry for the read-only the real root fs follows. Write access can be
+#  entry for the read-only real root fs follows. Write access can be
 #  enabled using:
 #    sudo mount -o remount,rw ${ROOT_RO}
 #  re-mounting it read-only is done using:
@@ -275,14 +287,14 @@ ${ROOT} ${ROOT_RO} ${ROOT_TYPE} ${ROOT_OPTIONS} 0 0
 EOF
 if [ $? -ne 0 ]; then
     log_failure_msg "${MYTAG} ERROR 11: failed to modify /etc/fstab (step 1)"
-    #exit 0
+    exit 0
 fi
 
 #remove root entry and swap from fstab
-cat ${rootmnt}${ROOT_RO}/etc/fstab | ${rootmnt}/bin/grep -v ' / ' | ${rootmnt}/bin/grep -v swap >>${rootmnt}/etc/fstab
+cat ${rootmnt}${ROOT_RO}/etc/fstab | ${rootmnt}/usr/bin/grep -v ' / ' | ${rootmnt}/usr/bin/grep -v swap >>${rootmnt}/etc/fstab
 if [ $? -ne 0 ]; then
     log_failure_msg "${MYTAG} ERROR 12: failed to modify etc/fstab (step 2)"
-    #exit 0
+    exit 0
 fi
 
 # now we are done. Additinal steps may be necessary depending on the actualy

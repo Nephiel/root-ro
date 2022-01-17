@@ -57,10 +57,14 @@ if ! grep -q "root-ro-driver=overlay" /boot/cmdline.txt; then
   sed -i "1 s|$| root-ro-driver=overlay|" /boot/cmdline.txt
 fi
 
-echo Removing the random seed file
-systemctl stop systemd-random-seed.service
-if [ -f /var/lib/systemd/random-seed ]; then
-  rm -f /var/lib/systemd/random-seed
+if [ -x /bin/systemctl ]; then
+  echo Removing the random seed file
+  systemctl stop systemd-random-seed.service
+  if [ -f /var/lib/systemd/random-seed ]; then
+    rm -f /var/lib/systemd/random-seed
+  fi
+else
+  echo systemctl not found, skipping removal of random seed file
 fi
 
 # Restarting without warning seems a bit harsh, so we'll just inform that it's necessary

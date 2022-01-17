@@ -1,25 +1,22 @@
-Read-only root filesystem for Raspbian Stretch
+Read-only root filesystem for Raspbian Bullseye
 ============================================
 This repository contains some useful files that allow you to use a Raspberry PI using a readonly filesystem.
 After running install.sh everything will be set up and the system will reboot into read-only mode.
 
 See instructions below to see how to switch to permanent or temporary write-mode.
 
-This script is tested with a freshly deployed Raspbian image with "desktop and recommended software", specifically with the img file dated 2018-11-13, kernel 4.14. (Tested on a Rpi 3B+). It has also been tested on a recent Rasbian image (Buster) on a Rpi 4B and a Rpi Zero W.
+This script is tested with a freshly deployed Raspbian Lite Bullseye image on a Raspberry Pi Zero W. It has also been tested on a recent Devuan Chimaera image on a Raspberry Pi Zero 2 W.
 
-This files contains some ideas and code of the following projects:
-- https://github.com/josepsanzcamp/root-ro
-- https://gist.github.com/niun/34c945d70753fc9e2cc7
-- https://github.com/chesty/overlayroot
-- Random-seed contribution by texahic
+This repository is a fork of JasperE84
+- https://github.com/JasperE84/root-ro
 
 Congratulate the original authors if these files work as expected. 
 
 Why use a read-only root filesystem
 =====
-There can be many reasons to configure a read only root filesystem. In my case I use it on Raspberry Pi's which are used for narrowcasting, kiosk installations and dashboard applications. I have the read-only filesystem enabled for three reasons:
+There can be many reasons to configure a read only root filesystem. In my case I use it on Raspberry Pi's which are used for home automation and unattended applications. I have the read-only filesystem enabled for three reasons:
 - Extend microSD card lifespan.
-- Make sure the filesystem isn't corrupted by random power cut shut downs (the Rpi's get their power from USB ports on flatscreen TV's).
+- Make sure the filesystem isn't corrupted by random power cut shut downs.
 - Undo any user changes and fix any user-induced errors by simply rebooting the Raspberry Pi.
 
 How it works
@@ -30,13 +27,21 @@ The script uses an overlay filesystem. Basically the normal root storage device 
 
 Read more about the overlay filesystem here: https://wiki.archlinux.org/index.php/Overlay_filesystem
 
+About the /boot partition
+====
+This script does not apply to the /boot partition of Raspberry Pi. That means it will still be writable by default. To change that, edit `/etc/fstab` and add the `ro` option to the /boot line on the third column from the right.
+To enable writing to the /boot partition, you can either remove the `ro` option from fstab and reboot, or use this command to do it live:
+```
+sudo mount -o remount,rw /boot
+```
+
 Setup
 =====
 To get everything configured and to enable the read-only filesystem, you can simply paste these commands.
 ```
 sudo apt-get -y install git
 cd /home/pi
-git clone https://github.com/JasperE84/root-ro.git
+git clone https://github.com/Nephiel/root-ro.git
 cd root-ro
 chmod +x install.sh
 sudo ./install.sh
